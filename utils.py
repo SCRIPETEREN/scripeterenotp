@@ -11,7 +11,6 @@ import json
 from useragents import USER_AGENTS
 
 def normalize(phone):
-    """Normalisasi nomor telepon ke format 62"""
     n = phone.strip().replace(' ', '').replace('-', '').replace('+', '')
     if n.startswith('08'):
         return '62' + n[1:]
@@ -22,7 +21,6 @@ def normalize(phone):
     return ''
 
 def fmt_08(p):
-    """Format ke 08xxx"""
     if p.startswith('62'):
         return '0' + p[2:]
     if p.startswith('0'):
@@ -30,7 +28,6 @@ def fmt_08(p):
     return '0' + p
 
 def fmt_nocode(p):
-    """Format tanpa kode negara (628xx -> 8xx)"""
     if p.startswith('62'):
         return p[2:]
     if p.startswith('0'):
@@ -38,7 +35,6 @@ def fmt_nocode(p):
     return p
 
 def fmt_plus(p):
-    """Format ke +62xxx"""
     if not p.startswith('+'):
         if p.startswith('62'):
             return '+' + p
@@ -48,7 +44,6 @@ def fmt_plus(p):
     return p
 
 def fmt_phone_only(p):
-    """Format nomor saja tanpa kode dan tanpa +"""
     if p.startswith('+62'):
         return p[3:]
     if p.startswith('62'):
