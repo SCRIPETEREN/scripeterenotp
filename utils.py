@@ -58,14 +58,12 @@ def fmt_phone_only(p):
     return p
 
 def get_public_ip():
-    """Mendapatkan IP publik"""
     try:
         return requests.get('https://api.ipify.org', timeout=5).text.strip()
     except:
         return '127.0.0.1'
 
 def extract_csrf(html):
-    """Ekstrak CSRF token dari HTML"""
     patterns = [
         r'<meta name="csrf-token" content="([^"]+)"',
         r'<meta name="csrf_token" content="([^"]+)"',
@@ -81,7 +79,6 @@ def extract_csrf(html):
     return None
 
 def generate_multipart(data, boundary):
-    """Generate multipart form data"""
     body = ""
     for key, val in data.items():
         body += f"--{boundary}\r\n"
@@ -91,11 +88,9 @@ def generate_multipart(data, boundary):
     return body
 
 def get_random_user_agent():
-    """Dapatkan user agent random"""
     return random.choice(USER_AGENTS)
 
 def get_headers_with_random_ua(custom_headers=None):
-    """Dapatkan headers dengan user agent random"""
     headers = {
         'User-Agent': get_random_user_agent(),
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -110,33 +105,28 @@ def get_headers_with_random_ua(custom_headers=None):
 def is_success_response(resp):
     """
     Cek apakah response benar-benar sukses.
-    Tidak hanya status code, tapi juga body JSON.
+    Status 2xx dianggap sukses, kecuali body JSON secara eksplisit menunjukkan error.
     """
     if resp is None:
         return False
-    if resp.status_code not in (200, 201, 202):
+    if resp.status_code < 200 or resp.status_code >= 300:
         return False
+
     try:
         data = resp.json()
         if isinstance(data, dict):
-            # Cek berbagai field indikasi error
-            if data.get('success') in (False, 'false', 0):
+            if 'success' in data and data['success'] in (False, 'false', 0):
                 return False
-            if data.get('status') in ('error', 'failed', '0', 'FAIL'):
+            if 'status' in data and data['status'] in ('error', 'failed', '0', 'FAIL', 'ERROR'):
                 return False
-            if data.get('error') and data.get('error') not in (None, '', 'null'):
-                return False
-            if data.get('code') and data.get('code') not in ('0', '200', '201', '00', 'success'):
+            if 'error' in data and data['error'] and data['error'] != 'null':
+                if data['error'] not in (None, '', 'null'):
+                    return False
+            if 'code' in data and data['code'] not in ('0', '200', '201', '00', 'success', 'OK'):
                 return False
             msg = data.get('message') or data.get('msg') or ''
-            if any(kata in msg.lower() for kata in ('gagal', 'failed', 'error', 'invalid', 'not found', 'tidak terdaftar')):
-                return False
-            # Jika ada field 'otp_sent' atau 'sent' = True
-            if data.get('otp_sent') in (False, 'false', 0):
-                return False
-            if data.get('sent') in (False, 'false', 0):
+            if any(kata in msg.lower() for kata in ('gagal', 'failed', 'error', 'invalid', 'not found', 'tidak terdaftar', 'wrong')):
                 return False
         return True
     except:
-        # Jika bukan JSON, anggap sukses hanya jika status 2xx
-        return resp.status_code < 300
+        return True
