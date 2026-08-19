@@ -27,9 +27,7 @@ def _send_otp(url, payload, headers, method='POST', timeout=30):
             resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
         else:
             resp = requests.get(url, params=payload, headers=headers, timeout=timeout)
-        if is_success_response(resp):
-            return resp
-        return None
+        return resp
     except Exception:
         return None
 
@@ -507,7 +505,7 @@ def send_whatsapp_business_otp(phone_plus):
     return _send_otp(url, {"phone": phone_plus, "method": "sms"}, headers)
 
 def send_telegram_otp(phone_plus):
-    url = "https://api.telegram.org/bot/otp/request"  # placeholder, sebenarnya pakai web
+    url = "https://api.telegram.org/bot/otp/request"
     headers = {"User-Agent": get_random_user_agent(), "Content-Type": "application/json"}
     return _send_otp(url, {"phone": phone_plus, "type": "sms"}, headers)
 
