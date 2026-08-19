@@ -7,7 +7,7 @@ import random
 import string
 import urllib.parse
 import requests
-
+import json
 from useragents import USER_AGENTS
 
 def normalize(phone):
@@ -22,23 +22,37 @@ def normalize(phone):
     return ''
 
 def fmt_08(p):
-    """Format ke 08"""
-    return '0' + p[2:] if p.startswith('62') else p
+    """Format ke 08xxx"""
+    if p.startswith('62'):
+        return '0' + p[2:]
+    if p.startswith('0'):
+        return p
+    return '0' + p
 
 def fmt_nocode(p):
-    """Format tanpa kode negara"""
-    return p[2:] if p.startswith('62') else p
-
-def fmt_plus(p):
-    """Format ke +62"""
-    return '+' + p if not p.startswith('+') else p
-
-def fmt_phone_only(p):
-    """Format nomor saja tanpa kode"""
+    """Format tanpa kode negara (628xx -> 8xx)"""
     if p.startswith('62'):
         return p[2:]
+    if p.startswith('0'):
+        return p[1:]
+    return p
+
+def fmt_plus(p):
+    """Format ke +62xxx"""
+    if not p.startswith('+'):
+        if p.startswith('62'):
+            return '+' + p
+        if p.startswith('0'):
+            return '+62' + p[1:]
+        return '+62' + p
+    return p
+
+def fmt_phone_only(p):
+    """Format nomor saja tanpa kode dan tanpa +"""
     if p.startswith('+62'):
         return p[3:]
+    if p.startswith('62'):
+        return p[2:]
     if p.startswith('0'):
         return p[1:]
     return p
@@ -92,3 +106,37 @@ def get_headers_with_random_ua(custom_headers=None):
     if custom_headers:
         headers.update(custom_headers)
     return headers
+
+def is_success_response(resp):
+    """
+    Cek apakah response benar-benar sukses.
+    Tidak hanya status code, tapi juga body JSON.
+    """
+    if resp is None:
+        return False
+    if resp.status_code not in (200, 201, 202):
+        return False
+    try:
+        data = resp.json()
+        if isinstance(data, dict):
+            # Cek berbagai field indikasi error
+            if data.get('success') in (False, 'false', 0):
+                return False
+            if data.get('status') in ('error', 'failed', '0', 'FAIL'):
+                return False
+            if data.get('error') and data.get('error') not in (None, '', 'null'):
+                return False
+            if data.get('code') and data.get('code') not in ('0', '200', '201', '00', 'success'):
+                return False
+            msg = data.get('message') or data.get('msg') or ''
+            if any(kata in msg.lower() for kata in ('gagal', 'failed', 'error', 'invalid', 'not found', 'tidak terdaftar')):
+                return False
+            # Jika ada field 'otp_sent' atau 'sent' = True
+            if data.get('otp_sent') in (False, 'false', 0):
+                return False
+            if data.get('sent') in (False, 'false', 0):
+                return False
+        return True
+    except:
+        # Jika bukan JSON, anggap sukses hanya jika status 2xx
+        return resp.status_code < 300
