@@ -56,7 +56,7 @@ def process_target(api, target62, ip, idx, total):
     resp = None
 
     try:
-        # Panggil fungsi sesuai post_type
+        # Panggil fungsi berdasarkan post_type
         if post_type == 'tokopedia':
             resp = send_tokopedia_otp(api['number_fmt'](target62))
         elif post_type == 'shopee':
@@ -305,14 +305,16 @@ def process_target(api, target62, ip, idx, total):
             status_text = "SKIP"
             detail = f"Unknown post_type: {post_type}"
 
-        # Setelah respon didapat, cek dengan is_success_response
+        # ============================================================
+        # Analisis response
+        # ============================================================
         if resp is not None:
             if is_success_response(resp):
                 status_text = "SUCCESS"
                 detail = "OTP sent"
                 success = True
             else:
-                # Ambil pesan error dari body jika ada
+                # Ambil pesan error dari body
                 try:
                     err_data = resp.json()
                     err_msg = err_data.get('message') or err_data.get('msg') or err_data.get('error') or ''
@@ -322,15 +324,13 @@ def process_target(api, target62, ip, idx, total):
                         detail = f"HTTP {resp.status_code}"
                 except:
                     detail = f"HTTP {resp.status_code}"
-                # Jika status code 429, anggap limited
                 if resp.status_code == 429:
                     status_text = "LIMITED"
                 else:
                     status_text = "FAIL"
         else:
-            # Jika resp None, kemungkinan error/timeout
             status_text = "ERROR"
-            detail = "No response or invalid"
+            detail = "No response (exception/timeout)"
 
     except requests.exceptions.Timeout:
         status_text, detail = "TIMEOUT", ""
@@ -340,7 +340,6 @@ def process_target(api, target62, ip, idx, total):
         status_text, detail = "ERROR", str(e)[:40]
 
     log_target(idx, total, name, status_text, detail)
-    # Jeda kecil agar tidak kena rate limit
     time.sleep(0.5 if success else 0.2)
     return success
 
