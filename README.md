@@ -35,7 +35,7 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/username/scripeterenotp.git
+git clone https://github.com/SCRIPETEREN/scripeterenotp.git
 cd scripeterenotp
 
 # Install dependencies
